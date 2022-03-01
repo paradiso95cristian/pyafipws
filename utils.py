@@ -16,6 +16,7 @@ __author__ = "Mariano Reingart <reingart@gmail.com>"
 __copyright__ = "Copyright (C) 2013 Mariano Reingart"
 __license__ = "GPL 3.0"
 
+import csv
 from io import IOBase
 import datetime
 import functools
@@ -633,6 +634,79 @@ A = 'Alfanumerico'  # 3
 I = 'Importe'       # 4
 C = A               # 1 (caracter alfabetico)
 B = A               # 9 (blanco)
+
+# Funciones para manejo de archivos de texto de ancho fijo
+
+
+def formato_txt(formatos, registros):
+    print("Formato:")
+    for tipo_reg, estructura in sorted(registros.items()):
+        formato = formatos[estructura]
+        comienzo = 1
+        print("=== %s ===" % estructura)
+        for fmt in formato:
+            clave, longitud, tipo = fmt[0:3]
+            dec = len(fmt) > 3 and fmt[3] or (tipo == "I" and "2" or "")
+            f = ["Campo: %-20s", "Posición: %3d", "Longitud: %4d", "Tipo: %s"]
+            v = [clave, comienzo, longitud, tipo]
+            if dec:
+                f.append("Decimales: %s")
+                v.append(dec)
+            if clave == "tipo_reg":
+                f.append("Valor: %s")
+                v.append(tipo_reg)
+            print(" *", " ".join(f) % tuple(v))
+            comienzo += longitud
+
+
+def leer_txt(formatos, registros, nombre_archivo):
+    ret = []
+    with open(nombre_archivo, "r") as archivo:
+        for linea in archivo:
+            tipo_reg = str(linea[0])
+            estructura = registros[tipo_reg]
+            formato = formatos[estructura]
+            d = leer(linea, formato)
+            if estructura == "encabezado":
+                ret.append(d)
+                dic = d
+            else:
+                dic.setdefault(estructura, []).append(d)
+    return ret
+
+
+def grabar_txt(formatos, registros, nombre_archivo, dicts, agrega=False):
+    with open(nombre_archivo, agrega and "a" or "w") as archivo:
+        for dic in dicts:
+            encabezado = formatos["encabezado"]
+            dic["tipo_reg"] = "0"
+            archivo.write(escribir(dic, encabezado))
+            for tipo_reg, estructura in sorted(registros.items()):
+                for d in dic.get(estructura, []):
+                    d["tipo_reg"] = tipo_reg
+                    archivo.write(escribir(d, formatos[estructura]))
+
+# Funciones para manejo de Panillas CSV y Tablas
+
+
+def generar_csv(filas, formato, fn="planilla.csv", delimiter=";"):
+    "Dado una lista de registros  escribe"
+    ext = os.path.splitext(fn)[1].lower()
+    if ext == ".csv":
+        with open(fn, "wb") as f:
+            fieldnames = [fmt[0] for fmt in formato]
+            csv_writer = csv.DictWriter(f, fieldnames, dialect="excel", delimiter=";")
+            csv_writer.writeheader()
+            for fila in filas:
+                csv_writer.writerow(fila)
+
+
+def tabular(filas, formato):
+    from tabulate import tabulate
+
+    columnas = [fmt[0] for fmt in formato if fmt[0] not in ("tipo_reg",)]
+    tabla = [[fila.get(col) for col in columnas] for fila in filas]
+    return tabulate(tabla, columnas, floatfmt=".2f")
 
 
 # Funciones para manejo de tablas en DBF
