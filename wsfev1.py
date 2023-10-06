@@ -31,6 +31,9 @@ import decimal
 import os
 import sys
 from .utils import verifica, inicializar_y_capturar_excepciones, BaseWS, get_install_dir
+import logging
+
+_logger = logging.getLogger(__name__)
 
 HOMO = False                    # solo homologaci�n
 TYPELIB = False                 # usar librer�a de tipos (TLB)
@@ -751,8 +754,8 @@ class WSFEv1(BaseWS):
     def CAEARegInformativo(self):
         "M�todo para informar comprobantes emitidos con CAEA"
         f = self.factura
-        import wdb
-        wdb.set_trace()
+        _logger.info("Facturaaaaaaaaaaaaaaaa")
+        _logger.info(f)
         ret = self.client.FECAEARegInformativo(
             Auth={'Token': self.Token, 'Sign': self.Sign, 'Cuit': self.Cuit},
             FeCAEARegInfReq={
