@@ -751,6 +751,8 @@ class WSFEv1(BaseWS):
     def CAEARegInformativo(self):
         "M�todo para informar comprobantes emitidos con CAEA"
         f = self.factura
+        import wdb
+        wdb.set_trace()
         ret = self.client.FECAEARegInformativo(
             Auth={'Token': self.Token, 'Sign': self.Sign, 'Cuit': self.Cuit},
             FeCAEARegInfReq={
